@@ -20,13 +20,10 @@ subsequent times:
 
 `git config -l`
 
-## Resolve OSX credential problems
+## Store credentials
 
-Delete all credentials and remake them manually on the next login
-
-[https://help.github.com/en/articles/updating-credentials-from-the-osx-keychain](https://help.github.com/en/articles/updating-credentials-from-the-osx-keychain)
+`git config credential.helper store`
 
 ## "Logout"
 
 `git config --global --unset-all`
-git remote set-url origin [url]
