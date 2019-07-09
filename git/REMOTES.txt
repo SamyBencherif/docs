@@ -6,8 +6,6 @@ Samy Bencherif's Documentation
 
 `git remote get-url origin`
 
-also command `openreposite` on my personal machine will open the page in the default browser
-
 ## Set url of current repo
 
 # First Time:
