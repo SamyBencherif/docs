@@ -1,3 +1,7 @@
+
+Samy Bencherif's Documentation
+------------------------------
+
 ## Get url of current repo
 
 `git remote get-url origin`

@@ -1,0 +1,10 @@
+
+Samy Bencherif's Documentation
+------------------------------
+
+I came here to add that you should try
+
+`cc -###`
+
+flag which prints (but doesn't run) the commands that the clang
+driver would perform. Pretty neat!
