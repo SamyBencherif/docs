@@ -1,0 +1,24 @@
+## Get url of current repo
+
+`git remote get-url origin`
+
+also command `openreposite` on my personal machine will open the page in the default browser
+
+## Set url of current repo
+
+`git remote set-url origin https://github.com/USERNAME/REPOSITORY.git`
+
+## Check credentials
+
+`git config -l`
+
+## Resolve OSX credential problems
+
+Delete all credentials and remake them manually on the next login
+
+[https://help.github.com/en/articles/updating-credentials-from-the-osx-keychain](https://help.github.com/en/articles/updating-credentials-from-the-osx-keychain)
+
+## "Logout"
+
+`git config --global --unset-all`
+git remote set-url origin [url]
