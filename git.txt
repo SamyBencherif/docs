@@ -6,6 +6,10 @@ also command `openreposite` on my personal machine will open the page in the def
 
 ## Set url of current repo
 
+first time:
+`git remote add origin https://www.github.com/USERNAME/REPOSITORY.git`
+
+subsequent times:
 `git remote set-url origin https://github.com/USERNAME/REPOSITORY.git`
 
 ## Check credentials
