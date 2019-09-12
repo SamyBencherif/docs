@@ -1,0 +1,18 @@
+
+Samy Bencherif's Documentation
+------------------------------
+
+Background color of color256 i
+
+```bash
+printf "\x1b[48;5;${i}mcolour${i}\x1b[0m\n";
+```
+
+Foreground color of color256 i
+
+```bash
+printf "\x1b[38;5;${i}mcolour${i}\x1b[0m\n";
+```
+
+To use color8 simply replace the unit digit of the first number,
+IE 38 becomes 30 to specify black.
