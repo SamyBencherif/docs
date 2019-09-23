@@ -16,3 +16,8 @@ printf "\x1b[38;5;${i}mcolour${i}\x1b[0m\n";
 
 To use color8 simply replace the unit digit of the first number,
 IE 38 becomes 30 to specify black.
+
+Try this nifty script
+```bash
+for i in {0..255}; do     printf "\x1b[48;5;${i}mcolour${i}\x1b[0m\n"; done | less -r
+```
