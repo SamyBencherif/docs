@@ -58,16 +58,19 @@ A2019-09-20 (Tentative)
 A2019-09-23T12:00:00
 [CSC 236] KEY * 
 
-A2019-09-24 (Class Time)
+E2019-09-24 (Class Time)
 [CSC 236] Exam #1 (Exam)
 
 E2019-09-24T14:15:00
 Google Mock Interview (Interview), Located 1222 EBII, check ePack for more info
 
-A2019-09-27 (Tentative)
+A2019-09-24T23:55:00
+[CSC 333] HW #3 
+
+A2019-09-27T23:55:00
 [EC 205] Problem Set 3
 
-A2019-10-01 (Class Time)
+E2019-10-01T11:45:00
 [EC 205] Exam #1 (Exam)
 
 A2019-10-03T12:00:00
