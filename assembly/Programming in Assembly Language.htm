@@ -1,0 +1,1984 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.6 [en] (WinNT; I) [Netscape]">
+   <title>Programming in Assembly Language</title>
+</head>
+<body>
+<b><font size=+1>Programming in Assembly
+Language</font></b>
+<blockquote><font size=+0>CS 272</font>
+<br><font size=+0>Sam Houston State Univ.</font>
+<br><font size=+0>Dr. Tim McGuire</font></blockquote>
+<b>Memory Segmentation</b>
+<ul>
+<li>
+<font size=-1>Memory segments are a direct consequence of using a 20 bit
+address in a 16 bit processor</font></li>
+
+<li>
+<font size=-1>Memory is partitioned into 64K (2<sup>16</sup>) segments</font></li>
+
+<li>
+<font size=-1>Each segment is identified by a 16-bit segment number ranging
+from
+<b><font face="Courier New">0000h-FFFFh</font></b></font></li>
+
+<li>
+<font size=-1>Within a segment, a memory location is specified by a 16-bit
+<i>offset</i>
+(the number of bytes from the beginning of the segment)</font></li>
+
+<li>
+<font size=-1>The Segment:Offset address is a <i>logical address</i></font></li>
+</ul>
+<b>Segment:Offset Addresses</b>
+<ul>
+<li>
+<font size=-1><b><font face="Courier New">A4FB:4872h</font></b> means offset
+<b><font face="Courier New">4872h</font></b>
+within segment <b><font face="Courier New">A4FBh</font></b></font></li>
+
+<li>
+<font size=-1>To get the physical address, the segment number is multiplied
+by 16 (shifted 4 bits to the left) and the offset is added</font></li>
+
+<li>
+<font size=-1><b><font face="Courier New">A4FB0h + 4872h = A9822h</font></b>
+(20 bit physical address)</font></li>
+
+<li>
+<font size=-1>There is a lot of overlap between segments; a new segment
+begins every 16 bytes (addresses ending in 0h)</font></li>
+
+<li>
+<font size=-1>We call these 16 bytes a <b><i>paragraph</i></b></font></li>
+
+<li>
+<font size=-1>Because segments may overlap, the segment:offset address
+is not unique</font></li>
+</ul>
+<b>8086 Registers</b>
+<ul>
+<li>
+<font size=-1>Information inside the microprocessor is stored in registers
+(fourteen 16-bit registers)</font></li>
+
+<li>
+<font size=-1><i>data registers</i> hold data for an operation</font></li>
+
+<li>
+<font size=-1><i>address registers</i> hold the address of an instruction
+or data</font></li>
+
+<li>
+<font size=-1>The address registers are divided into <i>segment</i>,
+<i>pointer</i>,
+and <i>index</i> registers</font></li>
+
+<li>
+<font size=-1>a <i>status register</i> (called FLAGS) keeps the current
+status of the processor</font></li>
+</ul>
+<b>Data Registers: AX, BX, CX, and DX</b>
+<ul>
+<li>
+<font size=-1>Available to the programmer for general data manipulation</font></li>
+
+<li>
+<font size=-1>Some operations require a particular register</font></li>
+
+<li>
+<font size=-1>High and low bytes of data registers can be accessed separately,
+i.e., AX is divided into AH and AL</font></li>
+
+<li>
+<font size=-1>AX (accumulator) is preferred for arithmetic, logic, and
+data transfer operations</font></li>
+
+<li>
+<font size=-1>BX (base register) serves as an address register</font></li>
+
+<li>
+<font size=-1>CX (count register) frequently serves as a loop counter</font></li>
+
+<li>
+<font size=-1>DX (data register) is used in multiplication and division</font></li>
+</ul>
+<b>Pointer and Index Registers: SP, BP, SI, DI</b>
+<ul>
+<li>
+<font size=-1>SP (<i>stack pointer</i>) points to the top of the processor's
+stack</font></li>
+
+<li>
+<font size=-1>BP (<i>base pointer</i>) usually accesses data on the stack</font></li>
+
+<li>
+<font size=-1>SI (<i>source index</i>) used to point to memory locations
+in the data segment</font></li>
+
+<li>
+<font size=-1>DI (<i>destination index</i>) performs same functions as
+SI.</font></li>
+
+<li>
+<font size=-1>DI and SI are often used for string operations</font></li>
+</ul>
+<b>Segment Registers: CS, DS, SS, ES</b>
+<ul>
+<li>
+<font size=-1>CS (<i>code segment</i>) addresses the start of the program's
+machine code in memory</font></li>
+
+<li>
+<font size=-1>DS (<i>data segment</i>) addresses the start of the program's
+data in memory</font></li>
+
+<li>
+<font size=-1>SS (<i>stack segment</i>) addresses the start of the program's
+stack space in memory</font></li>
+
+<li>
+<font size=-1>ES (<i>extra segment</i>) addresses and additional data segment,
+if necessary</font></li>
+</ul>
+<b>Instruction Pointer: IP</b>
+<ul>
+<li>
+<font size=-1>8086 uses registers CS and IP to access instructions</font></li>
+
+<li>
+<font size=-1>CS register contains the segment number of the next instruction
+and the IP contains the offset</font></li>
+
+<li>
+<font size=-1>The IP is updated each time an instruction is executed so
+it will point to the next instruction</font></li>
+
+<li>
+<font size=-1>The IP is not directly accessible to the user</font></li>
+</ul>
+<b>The FLAGS register</b>
+<ul>
+<li>
+<font size=-1>Indicates the status of the microprocessor</font></li>
+
+<li>
+<font size=-1>Two kinds of flag bits: <i>status flags</i> and <i>control
+flags</i></font></li>
+
+<li>
+<font size=-1>Status flags reflect the result of an instruction, e.g.,
+when the result of an arithmetic operation is 0, ZF (<i>zero flag</i>)
+is set to 1 (true)</font></li>
+
+<li>
+<font size=-1>Control flags enable or disable certain operations of the
+processor, e.g., if the IF (<i>interrupt flag</i>) is cleared (set to 0),
+inputs from the keyboard are ignored by the processor</font></li>
+</ul>
+<b>Instructions Groups and Concepts</b>
+<ul>
+<li>
+<font size=-1>Data Transfer Instructions</font></li>
+
+<li>
+<font size=-1>Arithmetic Instructions</font></li>
+
+<li>
+<font size=-1>Logic Instructions</font></li>
+
+<li>
+<font size=-1>Flow-control Instructions</font></li>
+
+<li>
+<font size=-1>Processor Control Instructions</font></li>
+
+<li>
+<font size=-1>String Instructions</font></li>
+</ul>
+<b>Data Transfer Instructions</b>
+<ul>
+<li>
+<font size=-1>General instructions</font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>mov, pop, push, xchg, xlat/xlatb</font></font></b></li>
+</ul>
+
+<li>
+<font size=-1>Input/Output instructions</font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>in, out</font></font></b></li>
+</ul>
+
+<li>
+<font size=-1>Address instructions</font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>lds, lea, les</font></font></b></li>
+</ul>
+
+<li>
+<font size=-1>Flag instructions</font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>lahf, popf, pushf, sahf</font></font></b></li>
+</ul>
+</ul>
+<b>General Instructions</b>
+<ul>
+<li>
+<b><font size=-1><font face="Courier New">mov&nbsp;&nbsp;&nbsp; </font><i>destination,
+source</i></font></b></li>
+
+<li>
+<b><font size=-1><font face="Courier New">pop&nbsp;&nbsp;&nbsp; </font><i>destination</i></font></b></li>
+
+<li>
+<b><font size=-1><font face="Courier New">push&nbsp;&nbsp; </font><i>source</i></font></b></li>
+
+<li>
+<b><font size=-1><font face="Courier New">xchg&nbsp;&nbsp; </font><i>destination,
+source</i></font></b></li>
+
+<li>
+<b><font size=-1><font face="Courier New">xlat(b)</font><i>table</i></font></b></li>
+
+<li>
+<font size=-1>Note that the destination comes first, just as in an assignment
+statement in C</font></li>
+</ul>
+<b><font size=-1>Examples</font></b>
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>mov ax, [word1]</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>"Move <b><font face="Courier New">word1</font></b> to <b><font face="Courier New">ax</font></b>"</font></li>
+
+<li>
+<font size=-1>Contents of register <b><font face="Courier New">ax</font></b>
+are replaced by the contents of the memory location
+<b><font face="Courier New">word1</font></b></font></li>
+
+<li>
+<font size=-1>The brackets specify that the contents of <b><font face="Courier New">word1</font></b>
+are stored -- <b><font face="Courier New">word1</font></b>==address,
+<b><font face="Courier New">[word1]</font></b>==contents</font></li>
+</ul>
+
+<li>
+<b><font face="Courier New"><font size=-1>xchg ah, bl</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Swaps the contents of <b><font face="Courier New">ah</font></b>and
+<b><font face="Courier New">bl</font></b></font></li>
+</ul>
+
+<li>
+<b><font face="Courier New"><font size=-1>Illegal: mov [word1], [word2]</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>can't have both operands be memory locations</font></li>
+</ul>
+</ul>
+<b>The Stack</b>
+<ul>
+<li>
+<font size=-1>A data structure in which items are added and removed only
+from one end (the "top")</font></li>
+
+<li>
+<font size=-1>A program must set aside a block of memory to hold the stack
+by declaring a stack segment</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>stack 256</font></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1><b>SS</b> will contain the segment number of the stack segment
+-- <b>SP</b> will be initialized to <b>256</b> (<b>100h</b>)</font></li>
+
+<li>
+<font size=-1>The stack grows from higher memory addresses to lower ones</font></li>
+</ul>
+<b>PUSH and POP</b>
+<ul>
+<li>
+<font size=-1>New words are added with <b>push</b></font></li>
+
+<li>
+<b><font size=-1>push <i>source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>SP is decreased by 2</font></li>
+
+<li>
+<font size=-1>a copy of the source contents is moved to SS:SP</font></li>
+</ul>
+
+<li>
+<font size=-1>Items are removed with <b>pop</b></font></li>
+
+<li>
+<b><font size=-1>pop <i>destination</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Content of SS:SP is moved to the destination</font></li>
+
+<li>
+<font size=-1>SP is increased by 2</font></li>
+</ul>
+</ul>
+<b>Stack example</b>
+<dir><b><font face="Courier New"><font size=-1>push ax&nbsp;&nbsp;&nbsp;&nbsp;
+;Save ax and bx</font></font></b>
+<br><b><font face="Courier New"><font size=-1>push bx&nbsp;&nbsp;&nbsp;&nbsp;
+; on the stack</font></font></b>
+<br><b><font face="Courier New"><font size=-1>mov ax, -1&nbsp;&nbsp;&nbsp;&nbsp;
+;Assign test values</font></font></b>
+<br><b><font face="Courier New"><font size=-1>mov bx, -2</font></font></b>
+<br><b><font face="Courier New"><font size=-1>mov cx, 0</font></font></b>
+<br><b><font face="Courier New"><font size=-1>mov dx, 0</font></font></b>
+<br><b><font face="Courier New"><font size=-1>push ax&nbsp;&nbsp;&nbsp;&nbsp;
+;Push ax onto stack</font></font></b>
+<br><b><font face="Courier New"><font size=-1>push bx&nbsp;&nbsp;&nbsp;&nbsp;
+;Push bx onto stack</font></font></b>
+<br><b><font face="Courier New"><font size=-1>pop cx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;Pop cx from stack</font></font></b>
+<br><b><font face="Courier New"><font size=-1>pop dx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;Pop dx from stack</font></font></b>
+<br><b><font face="Courier New"><font size=-1>pop bx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;Restore saved ax and bx</font></font></b>
+<br><font face="Courier New"><font size=-1><b>pop ax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; values from</b> stack</font></font></dir>
+<b>Arithmetic Instructions</b>
+<ul>
+<li>
+<font size=-1>Addition instructions</font></li>
+
+<ul>
+<li>
+<b><font size=-1>aaa, adc, add, daa, inc</font></b></li>
+</ul>
+
+<li>
+<font size=-1>Subtraction instructions</font></li>
+
+<ul>
+<li>
+<b><font size=-1>aas, cmp, das, dec, neg, sbb, sub</font></b></li>
+</ul>
+
+<li>
+<font size=-1>Multiplication instructions</font></li>
+
+<ul>
+<li>
+<b><font size=-1>aam, imul, mul</font></b></li>
+</ul>
+
+<li>
+<font size=-1>Division instructions</font></li>
+
+<ul>
+<li>
+<b><font size=-1>aad, cbw, cwd, div, idiv</font></b></li>
+</ul>
+</ul>
+<b>Addition Instructions</b>
+<ul>
+<li>
+<b><font size=-1>aaa</font></b></li>
+
+<ul>
+<li>
+<font size=-1>ASCII adjust for addition</font></li>
+</ul>
+
+<li>
+<b><font size=-1>adc <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Add with carry</font></li>
+</ul>
+
+<li>
+<b><font size=-1>add <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Add bytes or words</font></li>
+</ul>
+
+<li>
+<b><font size=-1>daa</font></b></li>
+
+<ul>
+<li>
+<font size=-1>Decimal adjust for addition</font></li>
+</ul>
+
+<li>
+<b><font size=-1>inc <i>destination</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Increment</font></li>
+</ul>
+</ul>
+<b>ADD and INC</b>
+<ul>
+<li>
+<font size=-1>ADD is used to add the contents of</font></li>
+
+<ul>
+<li>
+<font size=-1>two registers</font></li>
+
+<li>
+<font size=-1>a register and a memory location</font></li>
+
+<li>
+<font size=-1>a register and a constant</font></li>
+</ul>
+
+<li>
+<font size=-1>INC is used to add 1 to the contents of a register or memory
+location</font></li>
+</ul>
+<b><font size=-1>Examples</font></b>
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>add ax, [word1]</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>"Add <b><font face="Courier New">word1</font></b>to
+<b><font face="Courier New">ax</font></b>"</font></li>
+
+<li>
+<font size=-1>Contents of register <b>ax</b> and memory location
+<b>word1
+</b>are
+added, and the sum is stored in<b> ax</b></font></li>
+</ul>
+
+<li>
+<b><font face="Courier New"><font size=-1>inc ah</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Adds one to the contents of <b><font face="Courier New">ah</font></b></font></li>
+</ul>
+
+<li>
+<b><font face="Courier New"><font size=-1>Illegal: add [word1], [word2]</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>can't have both operands be memory locations</font></li>
+</ul>
+</ul>
+<b><font size=-1>Subtraction instructions</font></b>
+<ul>
+<li>
+<b><font size=-1>aas</font></b></li>
+
+<ul>
+<li>
+<font size=-1>ASCII adjust for subtraction</font></li>
+</ul>
+
+<li>
+<b><font size=-1>cmp <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Compare</font></li>
+</ul>
+
+<li>
+<b><font size=-1>das</font></b></li>
+
+<ul>
+<li>
+<font size=-1>Decimal adjust for subtraction</font></li>
+</ul>
+
+<li>
+<b><font size=-1>dec <i>destination</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Decrement byte or word</font></li>
+</ul>
+
+<li>
+<b><font size=-1>neg <i>destination</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Negate (two's complement)</font></li>
+</ul>
+
+<li>
+<b><font size=-1>sbb <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Subtract with borrow</font></li>
+</ul>
+
+<li>
+<b><font size=-1>sub <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Subtract</font></li>
+</ul>
+</ul>
+<b><font size=-1>Examples</font></b>
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>sub ax, [word1]</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>"Subtract <b>word1</b> from <b>ax</b>"</font></li>
+
+<li>
+<font size=-1>Contents of memory location <b>word1
+</b>is subtracted from
+the contents of register <b>ax</b>, and the sum is stored in<b> ax</b></font></li>
+</ul>
+
+<li>
+<b><font face="Courier New"><font size=-1>dec bx</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Subtracts one from the contents of <b>bx</b></font></li>
+</ul>
+
+<li>
+<b><font face="Courier New"><font size=-1>Illegal: sub [byte1], [byte2]</font></font></b></li>
+
+<ul>
+<li>
+<font size=-1>can't have both operands be memory locations</font></li>
+</ul>
+</ul>
+<b><font size=-1>Multiplication instructions</font></b>
+<ul>
+<li>
+<b><font size=-1>aam</font></b></li>
+
+<ul>
+<li>
+<font size=-1>ASCII adjust for multiply</font></li>
+</ul>
+
+<li>
+<b><font size=-1>imul <i>source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Integer (signed) multiply</font></li>
+</ul>
+
+<li>
+<b><font size=-1>mul <i>source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Unsigned multiply</font></li>
+</ul>
+</ul>
+<b><font size=-1>Byte and Word Multiplication</font></b>
+<ul>
+<li>
+<font size=-1>If two bytes are multiplied, the result is a 16-bit word</font></li>
+
+<li>
+<font size=-1>If two words are multiplied, the result is a 32-bit doubleword</font></li>
+
+<li>
+<font size=-1>For the byte form, one number is contained in the source
+and the other is assumed to be in <b>al</b> -- the product will be in <b>ax</b></font></li>
+
+<li>
+<font size=-1>For the word form, one number is contained in the source
+and the other is assumed to be in <b>ax</b> -- the most significant 16
+bits of the product will be in <b>dx</b> and the least significant 16 bits
+will be in <b>ax</b></font></li>
+</ul>
+<b><font size=-1>Examples</font></b>
+<ul>
+<li>
+<font size=-1>If <b>ax</b> contains <b>0002h</b> and <b>bx</b> contains
+<b>01FFh</b></font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>mul bx</font></font></b>
+<dir><b><font face="Courier New"><font size=-1>dx = 0000h ax = 03FEh</font></font></b></dir>
+</dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>If <b>ax</b> contains <b>0001h</b> and <b>bx</b> contains
+<b>FFFFh</b></font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>mul bx</font></font></b>
+<dir><b><font face="Courier New"><font size=-1>dx = 0000h ax = FFFFh</font></font></b></dir>
+<b><font face="Courier New"><font size=-1>imul bx</font></font></b>
+<dir><b><font face="Courier New"><font size=-1>dx = FFFFh ax = FFFFh</font></font></b></dir>
+</dir>
+</dir>
+<b><font size=-1>Division instructions</font></b>
+<ul>
+<li>
+<b><font size=-1>aad</font></b></li>
+
+<ul>
+<li>
+<font size=-1>ASCII adjust for divide</font></li>
+</ul>
+
+<li>
+<b><font size=-1>cbw</font></b></li>
+
+<ul>
+<li>
+<font size=-1>convert byte to word</font></li>
+</ul>
+
+<li>
+<b><font size=-1>cwd</font></b></li>
+
+<ul>
+<li>
+<font size=-1>convert word to doubleword</font></li>
+</ul>
+
+<li>
+<b><font size=-1>div <i>source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>unsigned divide</font></li>
+</ul>
+
+<li>
+<b><font size=-1>idiv <i>source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>integer (signed) divide</font></li>
+</ul>
+</ul>
+<b><font size=-1>Byte and Word Division</font></b>
+<ul>
+<li>
+<font size=-1>When division is performed, there are two results, the quotient
+and the remainder</font></li>
+
+<li>
+<font size=-1>These instructions divide 8 (or 16) bits into 16 (or 32)
+bits</font></li>
+
+<li>
+<font size=-1>Quotient and remainder are same size as the divisor</font></li>
+
+<li>
+<font size=-1>For the byte form, the 8 bit divisor is contained in the
+source and the dividend is assumed to be in <b>ax</b> -- the quotient will
+be in <b>al
+</b>and the remainder in<b> ah</b></font></li>
+
+<li>
+<font size=-1>For the word form, the 16 bit divisor is contained in the
+source and the dividend is assumed to be in <b>dx:ax</b> -- the quotient
+will be in <b>ax
+</b>and the remainder in<b> dx</b></font></li>
+</ul>
+<b><font size=-1>Examples</font></b>
+<ul>
+<li>
+<font size=-1>If <b>dx</b> = <b>0000h</b>,
+<b>ax</b> =
+<b>00005h</b>, and
+<b>bx</b>
+= <b>0002h</b></font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>div bx</font></font></b>
+<dir><b><font face="Courier New"><font size=-1>ax = 0002h dx = 0001h</font></font></b></dir>
+</dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>If <b>dx</b> = <b>0000h</b>,
+<b>ax</b> =
+<b>0005h</b>, and
+<b>bx</b>
+=
+<b>FFFEh</b></font></li>
+</ul>
+
+<dir>
+<dir><b><tt><font size=-1>div bx</font></tt></b>
+<dir><b><tt><font size=-1>ax = 0000h dx = 0005h</font></tt></b></dir>
+<b><tt><font size=-1>idiv bx</font></tt></b>
+<dir><b><tt><font size=-1>ax = FFFEh dx = 0001h</font></tt></b></dir>
+</dir>
+</dir>
+<b><font size=-1>Divide Overflow</font></b>
+<ul>
+<li>
+<font size=-1>It is possible that the quotient will be too big to fit in
+the specified destination (<b>al</b> or <b>ax</b>)</font></li>
+
+<li>
+<font size=-1>This can happen if the divisor is much smaller than the dividend</font></li>
+
+<li>
+<font size=-1>When this happens, the program terminates and the system
+displays the message "<b>Divide Overflow</b>"</font></li>
+</ul>
+<b><font size=-1>Sign Extension of the Dividend</font></b>
+<ul>
+<li>
+<font size=-1>Word division</font></li>
+
+<ul>
+<li>
+<font size=-1>The dividend is in <b>dx:ax</b> even if the actual dividend
+will fit in
+<b>ax</b></font></li>
+
+<li>
+<font size=-1>For <b>div</b>,
+<b>dx</b> should be cleared</font></li>
+
+<li>
+<font size=-1>For<b> idiv</b>,
+<b>dx</b> should be made the sign extension
+of <b>ax</b> using <b>cwd</b></font></li>
+</ul>
+
+<li>
+<font size=-1>Byte division</font></li>
+
+<ul>
+<li>
+<font size=-1>The dividend is in <b>ax</b> even if the actual dividend
+will fit in <b>al</b></font></li>
+
+<li>
+<font size=-1>For <b>div</b>,
+<b>ah</b> should be cleared</font></li>
+
+<li>
+<font size=-1>For <b>idiv</b>,
+<b>ah</b> should be made the sign extension
+of <b>al</b> using <b>cbw</b></font></li>
+</ul>
+</ul>
+<b><font size=-1>Logic Instructions</font></b>
+<ul>
+<li>
+<b><font size=-1>and <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Logical AND</font></li>
+</ul>
+
+<li>
+<b><font size=-1>not <i>destination</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Logical NOT (one's complement)</font></li>
+</ul>
+
+<li>
+<b><font size=-1>or <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Logical OR</font></li>
+</ul>
+
+<li>
+<b><font size=-1>test <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Test bits</font></li>
+</ul>
+
+<li>
+<b><font size=-1>xor <i>destination, source</i></font></b></li>
+
+<ul>
+<li>
+<font size=-1>Logical Exclusive OR</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<font size=-1>The ability to manipulate bits is one of the advantages of
+assembly language</font></li>
+
+<li>
+<font size=-1>One use of <b>and</b>,
+<b>or</b>, and
+<b>xor</b> is to selectively
+modify the bits in the destination using a bit pattern (<i>mask</i>)</font></li>
+
+<li>
+<font size=-1>The <b>and</b> instruction can be used to clear specific
+destination bits</font></li>
+
+<li>
+<font size=-1>The <b>or</b> instruction can be used to set specific destination
+bits</font></li>
+
+<li>
+<font size=-1>The <b>xor</b> instruction can be used to complement specific
+destination bits</font></li>
+</ul>
+<b><font size=-1>Examples</font></b>
+<ul>
+<li>
+<font size=-1>To clear the sign bit of <b>al</b> while leaving the other
+bits unchanged, use the <b>and</b> instruction with <b>01111111b =7Fh</b>
+as the mask</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>and al,7Fh</font></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>To set the most significant and least significant bits of
+<b>al</b>
+while preserving the other bits, use the <b>or</b> instruction with <b>10000001b
+= 81h</b> as the mask</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>or al,81h</font></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>To change the sign bit of <b>dx</b>, use the <b>xor</b> instruction
+with a mask of <b>8000h</b></font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>xor dx,8000h</font></font></b></dir>
+</dir>
+<b><font size=-1>The NOT instruction</font></b>
+<ul>
+<li>
+<font size=-1>The <b>not</b> instruction performs the one's complement
+operation on the destination</font></li>
+
+<li>
+<font size=-1>The format is</font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>not <i>destination</i></font></font></b></li>
+</ul>
+
+<li>
+<font size=-1>To complement the bits in <b>ax</b>:</font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>not ax</font></font></b></li>
+</ul>
+
+<li>
+<font size=-1>To complement the bits in <b>WORD1</b></font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>not [WORD1]</font></font></b></li>
+</ul>
+</ul>
+<b><font size=-1>The TEST instruction</font></b>
+<ul>
+<li>
+<font size=-1>The <b>test</b> instruction performs an <b>and</b> operation
+of the destination with the source but does not change the destination
+contents</font></li>
+
+<li>
+<font size=-1>The purpose of the <b>test</b> instruction is to set the
+status flags (discussed later)</font></li>
+</ul>
+<b><font size=-1>Status Flags</font></b>
+<dir><b><i><tt><font size=-1>Bit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Symbol</font></tt></i></b>
+<p><b><tt><font size=-1>0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Carry flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cf</font></tt></b>
+<br><b><tt><font size=-1>2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Parity flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+pf</font></tt></b>
+<br><b><tt><font size=-1>4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Auxiliary carry flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+af</font></tt></b>
+<br><b><tt><font size=-1>6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Zero flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+zf</font></tt></b>
+<br><b><tt><font size=-1>7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Sign flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+sf</font></tt></b>
+<br><b><tt><font size=-1>11&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Overflow flag&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+of</font></tt></b></dir>
+<b><font size=-1>The Carry Flag (CF)</font></b>
+<ul>
+<li>
+<font size=-1>CF = 1 if there is a carry out from the msb (most significant
+bit) on addition, or there is a borrow into the msb on subtraction</font></li>
+
+<li>
+<font size=-1>CF = 0 otherwise</font></li>
+
+<li>
+<font size=-1>CF is also affected by shift and rotate instructions</font></li>
+</ul>
+<b><font size=-1>The Parity Flag (PF)</font></b>
+<ul>
+<li>
+<font size=-1>PF = 1 if the low byte of a result has an even number of
+one bits (even parity)</font></li>
+
+<li>
+<font size=-1>PF = 0 otherwise (odd parity)</font></li>
+</ul>
+<b><font size=-1>The Auxiliary Carry Flag (AF)</font></b>
+<ul>
+<li>
+<font size=-1>AF = 1 if there is a carry out from bit 3 on addition, or
+there is a borrow into the bit 3 on subtraction</font></li>
+
+<li>
+<font size=-1>AF = 0 otherwise</font></li>
+
+<li>
+<font size=-1>AF is used in binary-coded decimal (BCD) operations</font></li>
+</ul>
+<b><font size=-1>The Zero Flag (ZF)</font></b>
+<ul>
+<li>
+<font size=-1>ZF = 1 for a zero result</font></li>
+
+<li>
+<font size=-1>ZF = 0 for a non-zero result</font></li>
+</ul>
+<b><font size=-1>The Sign Flag (SF)</font></b>
+<ul>
+<li>
+<font size=-1>SF = 1 if the msb of a result is 1; it means the result is
+negative if you are giving a signed interpretation</font></li>
+
+<li>
+<font size=-1>SF = 0 if the msb is 0</font></li>
+</ul>
+<b><font size=-1>The Overflow Flag (OF)</font></b>
+<ul>
+<li>
+<font size=-1>OF = 1 if signed overflow occurred</font></li>
+
+<li>
+<font size=-1>OF = 0 otherwise</font></li>
+</ul>
+<b><font size=-1>Shift Instructions</font></b>
+<ul>
+<li>
+<font size=-1>Shift and rotate instructions shift the bits in the destination
+operand by one or more positions either to the left or right</font></li>
+
+<li>
+<font size=-1>The instructions have two formats:</font></li>
+
+<ul>
+<li>
+<font size=-1><i>opcode destination, </i><b>1</b></font></li>
+
+<li>
+<font size=-1><i>opcode destination, </i><b>cl</b></font></li>
+</ul>
+
+<li>
+<font size=-1>The first shifts by one position, the second shifts by <i>N</i>
+positions, where <b>cl</b> contains <i>N</i> (<b>cl</b> is the only register
+which can be used)</font></li>
+</ul>
+<b><font size=-1>Left Shift Instructions</font></b>
+<ul>
+<li>
+<font size=-1>The SHL (shift left) instruction shifts the bits in the destination
+to the left.</font></li>
+
+<li>
+<font size=-1>Zeros are shifted into the rightmost bit positions and the
+last bit shifted out goes into CF</font></li>
+
+<li>
+<font size=-1>Effect on flags:</font></li>
+
+<ul>
+<li>
+<font size=-1>SF, PF, ZF reflect the result</font></li>
+
+<li>
+<font size=-1>AF is undefined</font></li>
+
+<li>
+<font size=-1>CF = last bit shifted out</font></li>
+
+<li>
+<font size=-1>OF = 1 if result changes sign on last shift</font></li>
+</ul>
+</ul>
+<b><font size=-1>SHL example</font></b>
+<ul>
+<li>
+<font size=-1><b>dh</b> contains 8Ah and <b>cl</b> contains 03h</font></li>
+
+<li>
+<font size=-1><b><font face="Courier New">dh = 10001010</font></b>,
+<b><font face="Courier New">cl
+= 00000011</font></b></font></li>
+
+<li>
+<font size=-1>after <b>shl dh,cl</b></font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>dh = 01010000, cf = 0</font></font></b></li>
+</ul>
+</ul>
+<b><font size=-1>The SAL instruction</font></b>
+<ul>
+<li>
+<font size=-1>The <b>shl</b> instruction can be used to multiply an operand
+by powers of 2</font></li>
+
+<li>
+<font size=-1>To emphasize the arithmetic nature of the operation, the
+opcode <b>sal</b> (<i>shift arithmetic left</i>) is used in instances where
+multiplication is intended</font></li>
+
+<li>
+<b><font size=-1>Both instructions generate the same machine code</font></b></li>
+</ul>
+<b><font size=-1>Right Shift Instructions</font></b>
+<ul>
+<li>
+<font size=-1>The SHR (shift right) instruction shifts the bits in the
+destination to the right.</font></li>
+
+<li>
+<font size=-1>Zeros are shifted into the leftmost bit positions and the
+last bit shifted out goes into CF</font></li>
+
+<li>
+<font size=-1>Effect on flags:</font></li>
+
+<ul>
+<li>
+<font size=-1>SF, PF, ZF reflect the result</font></li>
+
+<li>
+<font size=-1>AF is undefined</font></li>
+
+<li>
+<font size=-1>CF = last bit shifted out</font></li>
+
+<li>
+<font size=-1>OF = 1 if result changes on last shift</font></li>
+</ul>
+</ul>
+<b><font size=-1>SHR example</font></b>
+<ul>
+<li>
+<font size=-1><b>dh</b> contains 8Ah and <b>cl</b> contains 02h</font></li>
+
+<li>
+<font size=-1><b>dh = 10001010</b>,
+<b>cl = 00000010</b></font></li>
+
+<li>
+<font size=-1>after <b>shr dh,cl</b></font></li>
+
+<ul>
+<li>
+<b><font face="Courier New"><font size=-1>dh = 001000010, cf = 1</font></font></b></li>
+</ul>
+</ul>
+<b><font size=-1>The SAR instruction</font></b>
+<ul>
+<li>
+<font size=-1>The <b>sar</b> (<i>shift arithmetic right</i>) instruction
+can be used to divide an operand by powers of 2</font></li>
+
+<li>
+<font size=-1><b>sar</b> operates like <b>shr</b>, except the msb retains
+its original value</font></li>
+
+<li>
+<font size=-1>The effect on the flags is the same as for <b>shr</b></font></li>
+
+<li>
+<font size=-1>If unsigned division is desired, <b>shr</b> should be used
+instead of <b>sar</b></font></li>
+</ul>
+<b><font size=-1>Rotate Instructions</font></b>
+<ul>
+<li>
+<b><font size=-1>Rotate Left</font></b></li>
+
+<ul>
+<li>
+<font size=-1><b>The instruction rol</b> (<i>rotate left</i>) shifts bits
+to the left</font></li>
+
+<li>
+<font size=-1>The msb is shifted into the rightmost bit</font></li>
+
+<li>
+<font size=-1>The <b>cf</b> also gets the the bit shifted out of the msb</font></li>
+</ul>
+
+<li>
+<b><font size=-1>Rotate Right</font></b></li>
+
+<ul>
+<li>
+<font size=-1>ror (<i>rotate right</i>) rotates bits to the right</font></li>
+
+<li>
+<font size=-1>the rightmost bit is shifted into the msb and also into the
+<b>cf</b></font></li>
+</ul>
+</ul>
+<b><font size=-1>Rotate through Carry</font></b>
+<ul>
+<li>
+<b><font size=-1>Rotate through Carry Left</font></b></li>
+
+<ul>
+<li>
+<font size=-1><b>The instruction rcl</b> shifts bits to the left</font></li>
+
+<li>
+<font size=-1>The msb is shifted into <b>cf</b></font></li>
+
+<li>
+<font size=-1><b>cf</b> is shifted into the rightmost bit</font></li>
+</ul>
+
+<li>
+<b><font size=-1>Rotate through Carry Right</font></b></li>
+
+<ul>
+<li>
+<font size=-1><b>rcr</b> rotates bits to the right</font></li>
+
+<li>
+<font size=-1>The rightmost bit is shifted into <b>cf</b></font></li>
+
+<li>
+<font size=-1><b>cf</b> is shifted into the msb</font></li>
+</ul>
+
+<li>
+<font size=-1>See <b><a href="sample/shift.asm">SHIFT.ASM</a></b> for an
+example</font></li>
+</ul>
+<b><font size=-1>Flow-Control Instructions</font></b>
+<dir><b><font face="Courier New"><font size=-1>%TITLE "IBM Character Display
+-- <a href="sample/xascii.asm">XASCII.ASM</a>"</font></font></b>
+<br><b><font face="Courier New"><font size=-1>IDEAL</font></font></b>
+<br><b><font face="Courier New"><font size=-1>MODEL small</font></font></b>
+<br><b><font face="Courier New"><font size=-1>STACK 256</font></font></b>
+<br><b><font face="Courier New"><font size=-1>CODESEG</font></font></b>
+<br><b><font face="Courier New"><font size=-1>Start:&nbsp; mov ax, @data&nbsp;
+; Initialize DS to address</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov ds, ax&nbsp;&nbsp;&nbsp;&nbsp; ; of data segment</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov ah, 02h&nbsp;&nbsp;&nbsp; ; display character function</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov cx,256&nbsp;&nbsp;&nbsp;&nbsp; ; no. of chars to display</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov dl, 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; dl has ASCII code of null char</font></font></b>
+<br><b><font face="Courier New"><font size=-1>Ploop:&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; display a character</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+inc dl&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; increment ASCII
+code</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+dec cx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; decrement counter</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jnz Ploop&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; keep going if cx not zero</font></font></b>
+<br><b><font face="Courier New"><font size=-1>Exit:&nbsp;&nbsp; mov ah,
+04Ch&nbsp;&nbsp; ; DOS function: Exit program</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov al, 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; Return exit code value</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; Call DOS. Terminate
+program</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+END Start&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; End of program / entry point</font></font></b></dir>
+<b><font size=-1>Conditional Jumps</font></b>
+<ul>
+<li>
+<font size=-1><b>jnz</b> is an example of a conditional jump</font></li>
+
+<li>
+<font size=-1>Format is</font></li>
+</ul>
+
+<dir>
+<dir><font size=-1><b>j</b><i>xxx destination_label</i></font></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>If the condition for the jump is true, the next instruction
+to be executed is the one at <i>destination_label</i>.</font></li>
+
+<li>
+<font size=-1>If the condition is false, the instruction immediately following
+the jump is done next</font></li>
+
+<li>
+<font size=-1>For <b>jnz</b>, the condition is that the result of the previous
+operation is not zero</font></li>
+</ul>
+<b><font size=-1>Range of a Conditional Jump</font></b>
+<ul>
+<li>
+<font size=-1>Table 4.6 (and Table 16.4) shows all the conditional jumps</font></li>
+
+<li>
+<font size=-1>The <i>destination_label</i> must precede the jump instruction
+by no more than 126 bytes, or follow it by no more than 127 bytes</font></li>
+
+<li>
+<font size=-1>There are ways around this restriction (using the unconditional
+<b>jmp</b>
+instruction)</font></li>
+</ul>
+<b><font size=-1>The CMP Instruction</font></b>
+<ul>
+<li>
+<font size=-1>The jump condition is often provided by the <b>cmp</b> (<i>compare</i>)
+instruction:</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>cmp <i>destination, source</i></font></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1><b>cmp</b> is just like <b>sub</b>, except that the destination
+is not changed -- only the flags are set</font></li>
+
+<li>
+<font size=-1>Suppose <b>ax</b> = <b>7FFFh</b> and <b>bx</b> = <b>0001h</b></font></li>
+</ul>
+
+<dir>
+<dir>
+<dir><b><font face="Courier New"><font size=-1>cmp ax, bx</font></font></b>
+<br><b><font face="Courier New"><font size=-1>jg&nbsp; below</font></font></b></dir>
+<font size=-1><b>zf</b> = 0 and <b>sf</b> = <b>of</b> = 0, so control transfers
+to label
+<b>below</b></font></dir>
+</dir>
+<b><font size=-1>Types of Conditional Jumps</font></b>
+<ul>
+<li>
+<font size=-1>Signed Jumps:</font></li>
+
+<ul>
+<li>
+<b><font size=-1>jg/jnle, jge/jnl, jl/jnge, jle/jng</font></b></li>
+</ul>
+
+<li>
+<font size=-1>Unsigned Jumps:</font></li>
+
+<ul>
+<li>
+<b><font size=-1>ja/jnbe, jae/jnb, jb/jnae, jbe/jna</font></b></li>
+</ul>
+
+<li>
+<font size=-1>Single-Flag Jumps:</font></li>
+
+<ul>
+<li>
+<b><font size=-1>je/jz, jne/jnz, jc, jnc, jo, jno, js, jns, jp/jpe, jnp/jpo</font></b></li>
+</ul>
+</ul>
+<b><font size=-1>Signed versus Unsigned Jumps</font></b>
+<ul>
+<li>
+<font size=-1>Each of the signed jumps has an analogous unsigned jump (e.g.,
+the signed jump <b>jg</b> and the unsigned jump <b>ja</b>)</font></li>
+
+<li>
+<font size=-1>Which jump to use depends on the context</font></li>
+
+<li>
+<font size=-1>Using the wrong jump can lead to incorrect results</font></li>
+
+<li>
+<font size=-1>When working with standard ASCII character, either signed
+or unsigned jumps are OK (msb is always 0)</font></li>
+
+<li>
+<font size=-1>When working with the IBM extended ASCII codes, use unsigned
+jumps</font></li>
+</ul>
+<b><font size=-1>Conditional Jump Example</font></b>
+<ul>
+<li>
+<font size=-1>Suppose <b>ax</b> and <b>bx </b>contained signed numbers.
+Write some code to put the biggest one in <b>cx</b>:</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov cx,ax&nbsp;&nbsp;&nbsp;&nbsp;
+; put ax in cx</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; cmp bx,cx&nbsp;&nbsp;&nbsp;&nbsp;
+; is bx bigger?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jle NEXT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; no, go on</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov cx,bx&nbsp;&nbsp;&nbsp;&nbsp;
+; yes, put bx in cx</font></font></b>
+<br><b><font face="Courier New"><font size=-1>NEXT:</font></font></b></dir>
+</dir>
+<b><font size=-1>The JMP Instruction</font></b>
+<ul>
+<li>
+<font size=-1><b>jmp</b> causes an unconditional jump</font></li>
+
+<li>
+<b><font size=-1>jmp <i>destination</i></font></b></li>
+
+<li>
+<font size=-1>jmp can be used to get around the range restriction of a
+conditional jump</font></li>
+
+<li>
+<font size=-1>e.g, (this example can be made shorter, <i>how?</i>)</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>TOP:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+TOP:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; body of loop&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; body of loop</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; over 126 bytes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+dec cx</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; dec cx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jnz BOTTOM</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jnz TOP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jmp EXIT</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ax,
+bx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BOTTOM:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jmp TOP</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+EXIT:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov ax, bx</font></font></b></dir>
+</dir>
+<b><font size=-1>Branching Structures</font></b>
+<ul>
+<li>
+<font size=-1>IF-THEN</font></li>
+
+<li>
+<font size=-1>IF-THEN-ELSE</font></li>
+
+<li>
+<font size=-1>CASE</font></li>
+
+<li>
+<font size=-1>AND conditions</font></li>
+
+<li>
+<font size=-1>OR conditions</font></li>
+</ul>
+<b><font size=-1>IF-THEN structure</font></b>
+<ul>
+<li>
+<font size=-1>Example -- to compute |<b>ax</b>|:</font></li>
+</ul>
+
+<dir>
+<dir><b><font size=-1>if<font face="Courier New"> ax &lt; 0 </font>then</font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; ax = -ax</font></font></b>
+<br><b><font size=-1>endif</font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>Can be coded as:</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>; if ax &lt; 0</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; cmp ax,
+0&nbsp;&nbsp;&nbsp;&nbsp; ; ax &lt; 0 ?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jnl endif&nbsp;&nbsp;&nbsp;&nbsp;
+; no, exit</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; then</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; neg ax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; yes, change sign</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; endif</font></font></b></dir>
+</dir>
+<b><font size=-1>IF-THEN-ELSE structure</font></b>
+<ul>
+<li>
+<font size=-1>Example -- Suppose <b>al</b> and <b>bl</b> contain extended
+ASCII characters. Display the one that comes first in the character sequence:</font></li>
+</ul>
+
+<dir>
+<dir><b><font size=-1>if al &lt;= bl then</font></b>
+<br><font size=-1><i>&nbsp;&nbsp;&nbsp; display the character in</i><b>
+al</b></font>
+<br><b><font size=-1>else</font></b>
+<br><font size=-1><i>&nbsp;&nbsp;&nbsp; display the character</i><b> in
+bl</b></font>
+<br><b><font size=-1>endif</font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>This example may be coded as:</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov ah, 2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; prepare for display</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; if al &lt;= bl</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cmp al, bl&nbsp;&nbsp;&nbsp;&nbsp; ; al &lt;= bl ?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jnbe else&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; no, display bl</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; then&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; al &lt;= bl</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov dl, al&nbsp;&nbsp;&nbsp;&nbsp; ; move it to dl</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jmp display</font></font></b>
+<br><b><font face="Courier New"><font size=-1>else:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; bl &lt; al</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov dl, bl</font></font></b>
+<br><b><font face="Courier New"><font size=-1>display:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; display it</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; endif</font></font></b></dir>
+</dir>
+<b><font size=-1>The CASE structure</font></b>
+<ul>
+<li>
+<font size=-1>Multi-way branch structure with following form:</font></li>
+</ul>
+
+<dir>
+<dir><font size=-1><b>case</b> <b><i>expression</i></b></font>
+<br><b><i><font size=-1>&nbsp;&nbsp;&nbsp; value<sub>1</sub></font></i></b><font size=-1>
+: <b><i>statement<sub>1</sub></i></b></font>
+<br><b><i><font size=-1>&nbsp;&nbsp;&nbsp; value<sub>2</sub></font></i></b><font size=-1>
+: <b><i>statement<sub>2</sub></i></b></font>
+<br><font size=-1>&nbsp;&nbsp;&nbsp; …</font>
+<br><b><i><font size=-1>&nbsp;&nbsp;&nbsp; value<sub>n</sub></font></i></b><font size=-1>
+: <b><i>statement<sub>n</sub></i></b></font>
+<br><b><font size=-1>endcase</font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>Example -- If <b>ax</b> contains a negative number, put -1
+in <b>bx</b>; if 0, put 0 in <b>bx</b>; if positive, put 1 in <b>bx</b>:</font></li>
+</ul>
+
+<dir>
+<dir><b><font size=-1>case ax</font></b>
+<br><font size=-1><b>&nbsp;&nbsp;&nbsp; &lt; 0:
+</b><i>put
+</i><b>-1</b><i>
+in </i><b>bx</b></font>
+<br><font size=-1><b>&nbsp;&nbsp;&nbsp; = 0: </b><i>put
+</i><b>0</b><i>
+in </i><b>bx</b></font>
+<br><font size=-1><b>&nbsp;&nbsp;&nbsp; > 0: </b><i>put
+</i><b>1</b><i>
+in </i><b>bx</b></font>
+<br><b><font size=-1>endcase</font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>This example may be coded as:</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>; case ax</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; cmp ax,
+0&nbsp;&nbsp;&nbsp;&nbsp; ; test ax</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jl neg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; ax &lt; 0</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; je zero&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; ax = 0</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jg pos&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; ax > 0</font></font></b>
+<br><b><font face="Courier New"><font size=-1>neg:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov bx,
+-1</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jmp endcase</font></font></b>
+<br><b><font face="Courier New"><font size=-1>zero:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; xor bx,bx&nbsp;&nbsp;&nbsp;&nbsp;
+; put 0 in bx</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jmp endcase</font></font></b>
+<br><b><font face="Courier New"><font size=-1>pos:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov bx,
+0</font></font></b>
+<br><b><font face="Courier New"><font size=-1>endcase:</font></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>Only one <b>cmp</b> is needed, because jump instructions
+do not affect the flags</font></li>
+</ul>
+<b><font size=-1>AND conditions</font></b>
+<ul>
+<li>
+<font size=-1>Example -- read a character and display it if it is uppercase:</font></li>
+</ul>
+
+<dir>
+<dir><font size=-1><i>read a character into</i> al</font>
+<br><font size=-1><b>if</b><i> char</i> >= 'A' <b>and</b> <i>char</i> &lt;=
+'Z' <b>then</b></font>
+<br><i><font size=-1>&nbsp;&nbsp;&nbsp; display character</font></i>
+<br><b><font size=-1>endif</font></b></dir>
+</dir>
+
+<dir><b><font face="Courier New"><font size=-1>; read a character</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov ah, 1&nbsp;&nbsp;&nbsp;&nbsp; ;prepare to read</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ;char in al</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; if char >= 'A' and char
+&lt;= 'Z'</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cmp al,'A'&nbsp;&nbsp;&nbsp; ;char >= 'A'?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jnge endif&nbsp;&nbsp;&nbsp; ;no, exit</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cmp al,'Z'&nbsp;&nbsp;&nbsp; ;char &lt;= 'Z'?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+jnle endif&nbsp;&nbsp;&nbsp; ;no, exit</font></font></b>
+<br><b><font face="Courier New"><font size=-1>;then display character</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov dl,al&nbsp;&nbsp;&nbsp;&nbsp; ;get char</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mov ah,2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ;prep for display</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ;display char</font></font></b>
+<br><b><font face="Courier New"><font size=-1>endif:</font></font></b></dir>
+<b><font size=-1>OR conditions</font></b>
+<ul>
+<li>
+<font size=-1>Example -- read a character and display it if it is 'Y' or
+'y':</font></li>
+</ul>
+
+<dir>
+<dir><font size=-1><i>read a character into</i> al</font>
+<br><font size=-1><b>if</b><i> char</i> = 'y' <b>or</b> <i>char</i> = 'Y'
+<b>then</b></font>
+<br><i><font size=-1>&nbsp;&nbsp;&nbsp; display character</font></i>
+<br><b><font size=-1>endif</font></b></dir>
+</dir>
+
+<dir><b><font face="Courier New"><font size=-1>; read a character</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ah,
+1&nbsp;&nbsp;&nbsp;&nbsp; ;prepare to read</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;char in al</font></font></b>
+<br><b><font face="Courier New"><font size=-1>; if char = 'y' or char =
+'Y'</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; cmp al,'y'&nbsp;&nbsp;&nbsp;
+;char = 'y'?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; je then&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;yes, display it</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; cmp al,'Y'&nbsp;&nbsp;&nbsp;
+;char = 'Y'?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; je then&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;yes, display it</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jmp endif&nbsp;&nbsp;&nbsp;&nbsp;
+;no, exit</font></font></b>
+<br><b><font face="Courier New"><font size=-1>then:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ah,2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;prep for display</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov dl,al&nbsp;&nbsp;&nbsp;&nbsp;
+;move char</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;display char</font></font></b>
+<br><b><font face="Courier New"><font size=-1>endif:</font></font></b></dir>
+<b><font size=-1>Looping Structures</font></b>
+<ul>
+<li>
+<font size=-1>FOR loop</font></li>
+
+<li>
+<font size=-1>WHILE loop</font></li>
+
+<li>
+<font size=-1>REPEAT loop</font></li>
+</ul>
+<b><font size=-1>The FOR Loop</font></b>
+<ul>
+<li>
+<font size=-1>The loop statements are repeated a known number of times
+(counter-controlled loop)</font></li>
+</ul>
+
+<dir>
+<dir><b><font size=-1>for <i>loop_count</i> times do</font></b>
+<br><b><i><font size=-1>&nbsp;&nbsp;&nbsp; statements</font></i></b>
+<br><b><font size=-1>endfor</font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>The <b>loop</b> instruction implements a FOR loop:</font></li>
+</ul>
+
+<dir>
+<dir><b><font size=-1>loop <i>destination_label</i></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>The counter for the loop is the register <b>cx</b> which
+is initialized to <i>loop_count</i></font></li>
+
+<li>
+<font size=-1>The <b>loop</b> instruction causes <b>cx</b> to be decremented,
+and if
+<b>cx</b>&sup1; 0, jump to
+<i>destination_label</i></font></li>
+</ul>
+
+<ul>
+<li>
+<font size=-1>The destination label must precede the
+<b>loop</b> instruction
+by no more than 126 bytes</font></li>
+
+<li>
+<font size=-1>A FOR loop can be implemented as follows:</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>;initialize cx to loop_count</font></font></b>
+<br><b><font face="Courier New"><font size=-1>TOP:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; ;body
+of the loop</font></font></b>
+<br><b><font face="Courier New"><font size=-1>loop TOP</font></font></b></dir>
+</dir>
+<b><font size=-1>FOR loop example</font></b>
+<ul>
+<li>
+<font size=-1>a count-controlled loop to display a row of 80 stars</font></li>
+</ul>
+
+<dir><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov cx,80&nbsp;&nbsp;&nbsp;&nbsp;
+; # of stars</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ah,2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; disp char fnctn</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov dl,'*'&nbsp;&nbsp;&nbsp;
+; char to display</font></font></b>
+<br><b><font face="Courier New"><font size=-1>TOP:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; display a star</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; loop TOP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; repeat 80 times</font></font></b></dir>
+<b><font size=-1>FOR loop "gotcha"</font></b>
+<ul>
+<li>
+<font size=-1>The FOR loop implemented with the loop instruction always
+executes at least once</font></li>
+
+<li>
+<font size=-1>If <b>cx</b> = 0 at the beginning, the loop will execute
+65536 times!</font></li>
+
+<li>
+<font size=-1>To prevent this, use a <b>jcxz</b> before the loop</font></li>
+</ul>
+
+<dir><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jcxz
+SKIP</font></font></b>
+<br><b><font face="Courier New"><font size=-1>TOP:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; ; body
+of loop</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; loop TOP</font></font></b>
+<br><b><font face="Courier New"><font size=-1>SKIP:</font></font></b></dir>
+<b><font size=-1>The WHILE Loop</font></b>
+<dir><font size=-1><b>while</b> <i>condition </i><b>do</b></font>
+<br><i><font size=-1>&nbsp;&nbsp;&nbsp; statements</font></i>
+<br><b><font size=-1>endwhile</font></b></dir>
+
+<ul>
+<li>
+<font size=-1>The condition is checked at the top of the loop</font></li>
+
+<li>
+<font size=-1>The loop executes as long as the condition is true</font></li>
+
+<li>
+<font size=-1>The loop executes 0 or more times</font></li>
+</ul>
+<b><font size=-1>WHILE example</font></b>
+<ul>
+<li>
+<font size=-1>Count the number of characters in an input line</font></li>
+</ul>
+
+<dir><i><font size=-1>count = 0</font></i>
+<br><i><font size=-1>read char</font></i>
+<br><i><font size=-1><b>while</b> char &lt;> carriage_return
+<b>do</b></font></i>
+<br><i><font size=-1>&nbsp;&nbsp;&nbsp; increment count</font></i>
+<br><i><font size=-1>&nbsp;&nbsp;&nbsp; read char</font></i>
+<br><b><i><font size=-1>endwhile</font></i></b></dir>
+
+<dir><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov dx,0&nbsp;&nbsp;&nbsp;&nbsp;
+;DX counts chars</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ah,1&nbsp;&nbsp;&nbsp;&nbsp;
+;read char fnctn</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;read char into al</font></font></b>
+<br><b><font face="Courier New"><font size=-1>WHILE_:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; cmp al,0Dh&nbsp;&nbsp;
+;ASCII CR?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; je ENDWHILE&nbsp;
+;yes, exit</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; inc dx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;not CR, inc count</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;read another char</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jmp WHILE_&nbsp;&nbsp;
+;loop back</font></font></b>
+<br><b><font face="Courier New"><font size=-1>ENDWHILE:</font></font></b></dir>
+
+<ul>
+<li>
+<font size=-1>The label <b>WHILE_</b> is used because <b>WHILE</b> is a
+reserved word</font></li>
+</ul>
+<b><font size=-1>The REPEAT Loop</font></b>
+<dir><b><font size=-1>repeat</font></b>
+<br><b><i><font size=-1>&nbsp;&nbsp;&nbsp; statements</font></i></b>
+<br><b><font size=-1>until <i>condition</i></font></b></dir>
+
+<ul>
+<li>
+<font size=-1>The condition is checked at the bottom of the loop</font></li>
+
+<li>
+<font size=-1>The loop executes until the condition is true</font></li>
+
+<li>
+<font size=-1>The loop executes 1 or more times</font></li>
+</ul>
+<b><font size=-1>REPEAT example</font></b>
+<ul>
+<li>
+<font size=-1>read characters until a blank is read</font></li>
+</ul>
+
+<dir><b><font size=-1>repeat</font></b>
+<br><b><i><font size=-1>&nbsp;&nbsp;&nbsp; read character</font></i></b>
+<br><b><font size=-1>until <i>character is a blank</i></font></b></dir>
+
+<dir><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ah,1&nbsp;&nbsp;&nbsp;&nbsp;
+;read char fnctn</font></font></b>
+<br><b><font face="Courier New"><font size=-1>REPEAT:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;read char into al</font></font></b>
+<br><b><font face="Courier New"><font size=-1>;until</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; cmp al,'
+'&nbsp;&nbsp; ;a blank?</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; jne REPEAT&nbsp;&nbsp;
+;no, keep reading</font></font></b></dir>
+
+<ul>
+<li>
+<font size=-1>Using a <b>while</b> or a <b>repeat</b> is often a matter
+of personal preference. The <b>repeat</b> may be a little shorter because
+only one jump instruction is required, rather than two</font></li>
+</ul>
+<b><font size=-1>Digression: Displaying a String</font></b>
+<ul>
+<li>
+<font size=-1>We've seen INT 21h, functions 1 and 2, to read and display
+a single character</font></li>
+
+<li>
+<font size=-1>INT 21h, function 9 displays a character string</font></li>
+
+<ul>
+<li>
+<font size=-1>Input: <b>dx</b> = offset address of string</font></li>
+
+<li>
+<font size=-1>The string <b><i>must</i></b> end with a '$' character --
+The '$' is not displayed</font></li>
+</ul>
+</ul>
+<b><font size=-1>The LEA Instruction</font></b>
+<ul>
+<li>
+<font size=-1>INT 21h, function 9, expects the offset address of the string
+to be in
+<b>dx</b></font></li>
+
+<li>
+<font size=-1>To get it there, use the <b>lea</b> (<i>load effective address</i>)
+instruction</font></li>
+</ul>
+
+<dir>
+<dir><b><font size=-1><font face="Courier New">lea </font><i>destination,source</i></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1><b><i>destination</i></b> is a register, and <b><i>source</i></b>
+is a memory location</font></li>
+
+<li>
+<font size=-1>For example, <b>lea dx, msg</b> puts the offset address of
+the variable
+<b>msg</b> into
+<b>dx</b></font></li>
+</ul>
+<b><font size=-1>A digression from our digression -- program segment prefix
+(PSP)</font></b>
+<ul>
+<li>
+<font size=-1>DOS prefaces each program it loads with a PSP</font></li>
+
+<li>
+<font size=-1>The PSP contains information about the program, including
+any command line arguments</font></li>
+
+<li>
+<font size=-1>The segment number of the PSP is loaded in ds, so ds does
+not contain the segment number of the DATASEG</font></li>
+
+<li>
+<font size=-1>To correct this</font></li>
+</ul>
+
+<dir>
+<dir><b><font face="Courier New"><font size=-1>mov ax,@data</font></font></b>
+<br><b><font face="Courier New"><font size=-1>mov ds,ax</font></font></b></dir>
+</dir>
+
+<ul>
+<li>
+<font size=-1>The assembler translates</font><tt>@data<font size=-1> </font></tt><font size=-1>into
+a segment number</font></li>
+
+<li>
+<font size=-1>Two instructions are necessary since a number cannot be moved
+directly into a segment register</font></li>
+</ul>
+<b><font size=-1>So, back to printing a string...</font></b>
+<dir><b><font face="Courier New"><font size=-1>%TITLE "Print String Program
+-- <a href="sample/prtstr.asm">PRTSTR.ASM</a>"</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; IDEAL</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; MODEL
+small</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; STACK
+256</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; DATASEG</font></font></b>
+<br><b><font face="Courier New"><font size=-1>msg DB "Hello!$"</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; CODESEG</font></font></b>
+<br><b><font face="Courier New"><font size=-1>Start:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ax,@data&nbsp;&nbsp;&nbsp;&nbsp;
+;Initialize DS to address</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ds,ax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+; of data segment</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; lea dx,[msg]&nbsp;&nbsp;&nbsp;&nbsp;
+;get message</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ah,09h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;display string function</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;display message</font></font></b>
+<br><b><font face="Courier New"><font size=-1>Exit:</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov ah,4Ch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;DOS function: Exit program</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; mov al,0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;Return exit code value</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; int 21h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;Call DOS. Terminate program</font></font></b>
+<br><b><font face="Courier New"><font size=-1>&nbsp;&nbsp;&nbsp; END Start&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+;End of program / entry point</font></font></b></dir>
+
+</body>
+</html>
