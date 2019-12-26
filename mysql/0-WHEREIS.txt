@@ -3,3 +3,5 @@ Samy Bencherif's Documentation
 ------------------------------
 
 Please go to Ubuntu > CSC326 > ~/development/quickref.txt for information about this topic.
+
+NTS, copy it here!
