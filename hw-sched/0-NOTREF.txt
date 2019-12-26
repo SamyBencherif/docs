@@ -2,4 +2,6 @@
 Samy Bencherif's Documentation
 ------------------------------
 
-This is not a reference folder, it's just something that would be useful for me to carry around. There are a few folders like this.
+This is not a reference folder, it's just something that would be useful for me to carry around. 
+
+It contains information about homeworks and scheduling for my Fall semester of 2019 at NCSU
