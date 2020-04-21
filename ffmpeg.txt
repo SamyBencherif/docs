@@ -1,0 +1,6 @@
+
+# render images to video
+ffmpeg -r 24 -i folder/img%03d.png -c:v libx264 -vf fps=24 -pix_fmt yuv420p composite.mp4
+
+# scale video
+ffmpeg -i render-scaled.mp40001-0200.mkv -vf scale=640:640:flags=neighbor render-scaled.mp4
